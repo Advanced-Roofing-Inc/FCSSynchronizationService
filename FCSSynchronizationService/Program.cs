@@ -46,19 +46,24 @@ namespace FCSSynchronizationService
 
          connection.Close();
 
-         var requestData = JsonConvert.SerializeObject(request);
-
          // Send the request
          var requestUrl = ConfigurationManager.AppSettings["ApiUrl"];
 
          var client = new RestClient(requestUrl);
-         var restRequest = new RestRequest(Method.POST);
-         restRequest.AddJsonBody(requestData);
 
-         IRestResponse response = client.Execute(restRequest);
+         foreach (var employee in request.batch)
+         {
+            var restRequest = new RestRequest(Method.POST);
+            restRequest.AddParameter("api_key", request.api_key);
+            restRequest.AddParameter("master_id", request.master_id);
+            restRequest.AddParameter("batch[0][type]", "labor");
+            restRequest.AddParameter("batch[0][employee_id]", employee["employee_id"].ToString());
+            restRequest.AddParameter("batch[0][rate]", employee["rate"].ToString());
 
-         Console.WriteLine("Response Status: {0}", (int) response.StatusCode);
-         Console.WriteLine("Response: {0}", response.Content);
+            IRestResponse response = client.Execute(restRequest);
+            Console.WriteLine("Response Status: {0}", (int)response.StatusCode);
+            Console.WriteLine("Response: {0}", response.Content);
+         }
 
          Console.WriteLine("Press any key to exit...");
          Console.ReadKey();
