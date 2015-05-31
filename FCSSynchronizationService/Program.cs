@@ -1,0 +1,67 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data.SqlClient;
+using Newtonsoft.Json;
+using RestSharp;
+
+namespace FCSSynchronizationService
+{
+   class Program
+   {
+      static void Main(string[] args)
+      {
+         Console.WriteLine("Running FCS Synchronization Service");
+
+         var connectionString = ConfigurationManager.ConnectionStrings["Solomon2"].ConnectionString;
+         var connection = new SqlConnection(connectionString);
+         connection.Open();
+
+         // Create the api request
+         var request = new ApiRequest
+         {
+            api_key = ConfigurationManager.AppSettings["ApiKey"],
+            master_id = ConfigurationManager.AppSettings["ApiMasterId"],
+            batch = new List<Dictionary<string, object>>()
+         };
+
+         // Fetch employee data and add to request batch
+         using (connection)
+         {
+            var queryText = "select employeeid, employeerate from smEmp where EmployeeActive = 1";
+            var command = new SqlCommand(queryText, connection);
+            SqlDataReader reader = null;
+            reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+               var dict = new Dictionary<string, object>();
+               dict.Add("employee_id", reader["employeeid"].ToString());
+               dict.Add("rate", Convert.ToDouble(reader["employeerate"]));
+               dict.Add("type", "labor");
+
+               request.batch.Add(dict);
+            }
+         }
+
+         connection.Close();
+
+         var requestData = JsonConvert.SerializeObject(request);
+
+         // Send the request
+         var requestUrl = ConfigurationManager.AppSettings["ApiUrl"];
+
+         var client = new RestClient(requestUrl);
+         var restRequest = new RestRequest(Method.POST);
+         restRequest.AddJsonBody(requestData);
+
+         IRestResponse response = client.Execute(restRequest);
+
+         Console.WriteLine("Response Status: {0}", (int) response.StatusCode);
+         Console.WriteLine("Response: {0}", response.Content);
+
+         Console.WriteLine("Press any key to exit...");
+         Console.ReadKey();
+      }
+   }
+}
