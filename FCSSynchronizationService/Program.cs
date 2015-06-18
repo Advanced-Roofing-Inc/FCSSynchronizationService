@@ -33,12 +33,15 @@ namespace FCSSynchronizationService
             SqlDataReader reader = null;
             reader = command.ExecuteReader();
 
+            int burdenRate = Convert.ToInt32(ConfigurationManager.AppSettings["BurdenRate"]);
+
             while (reader.Read())
             {
                var dict = new Dictionary<string, object>();
                dict.Add("employee_id", reader["employeeid"].ToString());
                dict.Add("rate", Convert.ToDouble(reader["employeerate"]));
                dict.Add("type", "labor");
+               dict.Add("burden", burdenRate);
 
                request.batch.Add(dict);
             }
@@ -65,8 +68,8 @@ namespace FCSSynchronizationService
             Console.WriteLine("Response: {0}", response.Content);
          }
 
-         Console.WriteLine("Press any key to exit...");
-         Console.ReadKey();
+         //Console.WriteLine("Press any key to exit...");
+         //Console.ReadKey();
       }
    }
 }
