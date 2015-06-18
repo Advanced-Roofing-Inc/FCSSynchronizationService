@@ -12,6 +12,5 @@
       <add key="ApiUrl" value="http://url" />
       <add key="ApiMasterId" value="master id" />
       <add key="ApiKey" value="api key" />
-      <add key="BurdenRate" value="35" />
    </appSettings>
 </configuration>
